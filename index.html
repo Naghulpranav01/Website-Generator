@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexGen AI — Speak Your Website Into Existence</title>
+    <meta name="description" content="NexGen AI Website Generator — Type a prompt, get a stunning website instantly. Powered by advanced AI with real-time 3D rendering.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- GSAP + Physics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Three.js Canvas Container -->
+    <div id="three-canvas"></div>
+
+    <!-- Gradient Overlays -->
+    <div class="gradient-overlay gradient-overlay--top"></div>
+    <div class="gradient-overlay gradient-overlay--bottom"></div>
+
+    <!-- Loading Screen -->
+    <div id="loader">
+        <div class="loader-content">
+            <div class="loader-logo">
+                <span class="loader-logo__icon">◆</span>
+                <span class="loader-logo__text">NexGen</span>
+            </div>
+            <div class="loader-bar">
+                <div class="loader-bar__fill"></div>
+            </div>
+            <p class="loader-status">Initializing quantum renderer...</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav glass" id="navbar">
+        <div class="nav__logo">
+            <span class="nav__icon">◆</span>
+            <span class="nav__brand">NexGen<span class="nav__brand-accent">.ai</span></span>
+        </div>
+        <div class="nav__links">
+            <a href="#features" class="nav__link">Features</a>
+            <a href="#how-it-works" class="nav__link">How It Works</a>
+            <a href="#generator" class="nav__link">Generator</a>
+        </div>
+        <button class="btn btn--nav magnetic" id="nav-cta">
+            <span class="btn__text">Start Building</span>
+            <span class="btn__glow"></span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <main>
+        <section class="hero" id="hero">
+            <div class="hero__badge" id="hero-badge">
+                <span class="hero__badge-dot"></span>
+                <span>AI-Powered • Free to Use • Instant Results</span>
+            </div>
+
+            <h1 class="hero__title" id="hero-title">
+                <span class="hero__title-line">
+                    <span class="word-reveal">Speak</span>
+                    <span class="word-reveal">Your</span>
+                </span>
+                <span class="hero__title-line">
+                    <span class="word-reveal gradient-text">Website</span>
+                    <span class="word-reveal">Into</span>
+                </span>
+                <span class="hero__title-line">
+                    <span class="word-reveal gradient-text-alt">Existence</span>
+                    <span class="word-reveal hero__title-dot">.</span>
+                </span>
+            </h1>
+
+            <p class="hero__subtitle" id="hero-subtitle">
+                Describe your dream website in plain English. Our AI understands your vision 
+                and writes every line of code — <span class="text-glow">instantly</span>.
+            </p>
+
+            <!-- Prompt Input -->
+            <div class="prompt-container" id="prompt-container">
+                <div class="prompt-box glass" id="prompt-box">
+                    <div class="prompt-box__glow"></div>
+                    <div class="prompt-box__inner">
+                        <div class="prompt-box__icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </div>
+                        <textarea id="prompt-input" class="prompt-box__input" placeholder="Describe your website... e.g., 'A dark-mode portfolio for a photographer with a gallery grid and contact form'" rows="1"></textarea>
+                        <button class="btn btn--generate magnetic" id="generate-btn">
+                            <span class="btn__text">Generate Website</span>
+                            <span class="btn__icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </span>
+                            <span class="btn__glow"></span>
+                        </button>
+                    </div>
+                    <div class="prompt-box__suggestions">
+                        <button class="suggestion-chip" data-prompt="A dark-mode UX designer portfolio with a cinematic hero section, a filterable case study grid with hover animations, about section with skills progress bars, and a contact form with glassmorphic cards">🎨 UX Portfolio</button>
+                        <button class="suggestion-chip" data-prompt="A modern dark SaaS landing page for an AI analytics platform with a gradient hero, animated stats counter, 3-tier pricing table with a highlighted popular plan, feature comparison grid, testimonial carousel, and a sticky CTA banner">📊 SaaS Landing</button>
+                        <button class="suggestion-chip" data-prompt="An elegant restaurant website with a dark warm theme, full-screen hero with overlay, animated menu categories with prices, photo gallery grid, reservation form with date picker, chef spotlight section, and Google Maps embed placeholder">🍽️ Restaurant</button>
+                        <button class="suggestion-chip" data-prompt="A dark-mode tech blog with a featured post hero banner, article card grid with category tags and read-time badges, sidebar with popular posts, newsletter signup with glassmorphic styling, and a search bar in the navigation">✍️ Blog</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Key Input (Collapsible) -->
+            <div class="api-config" id="api-config">
+                <button class="api-config__toggle" id="api-toggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Configure API Key</span>
+                    <svg class="api-config__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="api-config__panel" id="api-panel">
+                    <div class="api-config__field glass">
+                        <select id="api-provider" class="api-config__select">
+                            <option value="groq">Groq (Llama 3)</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="claude">Anthropic Claude</option>
+                            <option value="openai">OpenAI</option>
+                        </select>
+                        <input type="password" id="api-key-input" class="api-config__input" placeholder="Enter your API key">
+                        <button class="api-config__save" id="api-save-btn">Save</button>
+                    </div>
+                    <p class="api-config__note">Your key is stored locally in your browser. Never shared.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Floating Code Simulator -->
+        <section class="simulator-section" id="simulator-section">
+            <div class="simulator-wrapper" id="simulator-wrapper">
+                <div class="simulator glass" id="simulator">
+                    <div class="simulator__header">
+                        <div class="simulator__dots">
+                            <span class="dot dot--red"></span>
+                            <span class="dot dot--yellow"></span>
+                            <span class="dot dot--green"></span>
+                        </div>
+                        <div class="simulator__tab">
+                            <span class="simulator__tab-icon">⚡</span>
+                            <span>generated-site.html</span>
+                        </div>
+                        <div class="simulator__actions">
+                            <span class="simulator__action">index.html</span>
+                        </div>
+                    </div>
+                    <div class="simulator__body">
+                        <div class="simulator__lines" id="code-lines">
+                            <!-- Code lines generated by JS -->
+                        </div>
+                        <div class="simulator__cursor" id="code-cursor"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features" id="features">
+            <div class="section-header">
+                <span class="section-tag">Features</span>
+                <h2 class="section-title">Built for the <span class="gradient-text">future</span></h2>
+                <p class="section-subtitle">Everything you need to go from idea to live website in seconds.</p>
+            </div>
+            <div class="features__grid">
+                <div class="feature-card glass" data-feature="1">
+                    <div class="feature-card__icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#grad1)" stroke-width="1.5">
+                            <defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#7c3aed"/><stop offset="100%" style="stop-color:#06b6d4"/></linearGradient></defs>
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Instant Generation</h3>
+                    <p class="feature-card__desc">Powered by Groq's lightning-fast inference. Your website is generated in under 3 seconds, not minutes.</p>
+                </div>
+                <div class="feature-card glass" data-feature="2">
+                    <div class="feature-card__icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#grad1)" stroke-width="1.5">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Fully Responsive</h3>
+                    <p class="feature-card__desc">Every generated site is mobile-first and adapts beautifully across all devices and screen sizes.</p>
+                </div>
+                <div class="feature-card glass" data-feature="3">
+                    <div class="feature-card__icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#grad1)" stroke-width="1.5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Secure & Private</h3>
+                    <p class="feature-card__desc">Your API key stays in your browser. Generated code is rendered in a sandboxed iframe for maximum safety.</p>
+                </div>
+                <div class="feature-card glass" data-feature="4">
+                    <div class="feature-card__icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#grad1)" stroke-width="1.5">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Clean Code Output</h3>
+                    <p class="feature-card__desc">Get production-ready HTML, CSS, and JavaScript. Download and deploy anywhere — no vendor lock-in.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="how-it-works" id="how-it-works">
+            <div class="section-header">
+                <span class="section-tag">How It Works</span>
+                <h2 class="section-title">Three steps to <span class="gradient-text-alt">launch</span></h2>
+            </div>
+            <div class="steps">
+                <div class="step glass" data-step="1">
+                    <div class="step__number">01</div>
+                    <h3 class="step__title">Describe Your Vision</h3>
+                    <p class="step__desc">Type what you want in plain English. "A modern SaaS landing page with dark mode and pricing cards."</p>
+                </div>
+                <div class="step__connector">
+                    <div class="step__line"></div>
+                    <div class="step__arrow">→</div>
+                </div>
+                <div class="step glass" data-step="2">
+                    <div class="step__number">02</div>
+                    <h3 class="step__title">AI Writes the Code</h3>
+                    <p class="step__desc">Our AI processes your prompt and generates complete, production-ready HTML, CSS, and JavaScript instantly.</p>
+                </div>
+                <div class="step__connector">
+                    <div class="step__line"></div>
+                    <div class="step__arrow">→</div>
+                </div>
+                <div class="step glass" data-step="3">
+                    <div class="step__number">03</div>
+                    <h3 class="step__title">Preview & Download</h3>
+                    <p class="step__desc">See your website live in a preview window. Download the code and deploy it anywhere you want.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Generator Output Section -->
+        <section class="generator-output" id="generator">
+            <div class="section-header">
+                <span class="section-tag">Generator</span>
+                <h2 class="section-title">Your <span class="gradient-text">creation</span> appears here</h2>
+            </div>
+            <div class="output-container" id="output-container">
+                <div class="output-placeholder glass" id="output-placeholder">
+                    <div class="output-placeholder__icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </div>
+                    <h3>Ready to Generate</h3>
+                    <p>Enter your prompt above and click "Generate Website" to see your creation come to life.</p>
+                </div>
+                <div class="output-frame-wrapper" id="output-frame-wrapper" style="display:none;">
+                    <div class="output-toolbar glass">
+                        <div class="output-toolbar__dots">
+                            <span class="dot dot--red"></span>
+                            <span class="dot dot--yellow"></span>
+                            <span class="dot dot--green"></span>
+                        </div>
+                        <div class="output-toolbar__url">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span>generated-site.preview</span>
+                        </div>
+                        <div class="output-toolbar__actions">
+                            <button class="output-action" id="download-btn" title="Download HTML">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            </button>
+                            <button class="output-action" id="fullscreen-btn" title="Fullscreen">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                            </button>
+                            <button class="output-action" id="code-view-btn" title="View Code">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <iframe id="output-iframe" class="output-iframe" sandbox="allow-scripts allow-same-origin" title="Generated Website Preview"></iframe>
+                </div>
+                <!-- Code View Panel -->
+                <div class="code-view-panel glass" id="code-view-panel" style="display:none;">
+                    <div class="code-view-header">
+                        <span>Source Code</span>
+                        <button class="output-action" id="close-code-view">✕</button>
+                    </div>
+                    <pre class="code-view-content" id="code-view-content"></pre>
+                </div>
+                <!-- Loading State -->
+                <div class="output-loading" id="output-loading" style="display:none;">
+                    <div class="output-loading__spinner">
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring spinner-ring--2"></div>
+                        <div class="spinner-ring spinner-ring--3"></div>
+                    </div>
+                    <p class="output-loading__text" id="loading-text">Crafting your website...</p>
+                    <div class="output-loading__progress">
+                        <div class="output-loading__bar" id="loading-bar"></div>
+                    </div>
+                </div>
+                <!-- Error State -->
+                <div class="output-error glass" id="output-error" style="display:none;">
+                    <div class="output-error__icon">⚠️</div>
+                    <h3 class="output-error__title" id="error-title">Generation Failed</h3>
+                    <p class="output-error__msg" id="error-msg">Something went wrong. Please try again.</p>
+                    <button class="btn btn--retry" id="retry-btn">Try Again</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer__content">
+                <div class="footer__brand">
+                    <span class="nav__icon">◆</span>
+                    <span class="nav__brand">NexGen<span class="nav__brand-accent">.ai</span></span>
+                </div>
+                <p class="footer__text">Built with ❤️ using Three.js, GSAP, and Groq AI</p>
+                <p class="footer__copy">© 2026 NexGen AI. Open source and free forever.</p>
+            </div>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
