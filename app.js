@@ -13,6 +13,7 @@
         mouse: { x: 0, y: 0, normalized: { x: 0, y: 0 } },
         apiKey: localStorage.getItem('nexgen_api_key') || '',
         apiProvider: localStorage.getItem('nexgen_api_provider') || 'groq',
+        apiModel: localStorage.getItem('nexgen_api_model') || '',
         isGenerating: false,
         generatedCode: '',
     };
@@ -583,10 +584,14 @@
         const input = document.getElementById('api-key-input');
         const saveBtn = document.getElementById('api-save-btn');
         const providerSelect = document.getElementById('api-provider');
+        const modelInput = document.getElementById('api-model-input');
 
         // Pre-fill if key exists
         if (state.apiKey) {
             input.value = state.apiKey;
+        }
+        if (state.apiModel && modelInput) {
+            modelInput.value = state.apiModel;
         }
         if (state.apiProvider && providerSelect) {
             providerSelect.value = state.apiProvider;
@@ -608,7 +613,17 @@
                 'claude': 'Enter Anthropic API key (console.anthropic.com)',
                 'openai': 'Enter OpenAI API key (platform.openai.com)'
             };
+            const modelPlaceholders = {
+                'groq': 'Model (Default: llama-3.3-70b-versatile)',
+                'gemini': 'Model (Default: gemini-1.5-pro-latest)',
+                'claude': 'Model (Default: claude-3-5-sonnet-20240620)',
+                'openai': 'Model (Default: gpt-4o)'
+            };
             input.placeholder = placeholders[provider] || 'Enter API Key';
+            if (modelInput) {
+                modelInput.placeholder = modelPlaceholders[provider] || 'Optional: Custom Model ID';
+                modelInput.placeholder = modelPlaceholders[provider] || 'Enter Model ID';
+            }
         }
 
         toggle.addEventListener('click', () => {
@@ -617,12 +632,21 @@
 
         saveBtn.addEventListener('click', () => {
             const key = input.value.trim();
+            const model = modelInput ? modelInput.value.trim() : '';
             if (key) {
                 state.apiKey = key;
+                state.apiModel = model;
                 localStorage.setItem('nexgen_api_key', key);
-                saveBtn.textContent = '✓ Saved';
-                gsap.fromTo(saveBtn, { scale: 0.95 }, { scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)' });
-                setTimeout(() => { saveBtn.textContent = 'Save'; }, 2000);
+                localStorage.setItem('nexgen_api_model', model);
+                
+                saveBtn.textContent = 'Saved!';
+                saveBtn.style.background = '#22c55e';
+                
+                setTimeout(() => {
+                    saveBtn.textContent = 'Save';
+                    saveBtn.style.background = '';
+                    config.classList.remove('is-open');
+                }, 1500);
             }
         });
 
@@ -890,8 +914,10 @@ GSAP animations to implement:
         try {
             let response;
             const enrichedPrompt = enrichPrompt(prompt);
+            let modelToUse = state.apiModel;
 
             if (state.apiProvider === 'groq') {
+                if (!modelToUse) modelToUse = 'llama-3.3-70b-versatile';
                 response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -899,7 +925,7 @@ GSAP animations to implement:
                         'Authorization': `Bearer ${state.apiKey}`,
                     },
                     body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile',
+                        model: modelToUse,
                         messages: [
                             { role: 'system', content: systemPrompt },
                             { role: 'user', content: enrichedPrompt },
@@ -910,7 +936,8 @@ GSAP animations to implement:
                     }),
                 });
             } else if (state.apiProvider === 'gemini') {
-                response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${state.apiKey}`, {
+                if (!modelToUse) modelToUse = 'gemini-1.5-pro-latest';
+                response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${state.apiKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -929,6 +956,7 @@ GSAP animations to implement:
                     }),
                 });
             } else if (state.apiProvider === 'claude') {
+                if (!modelToUse) modelToUse = 'claude-3-5-sonnet-20240620';
                 response = await fetch('https://api.anthropic.com/v1/messages', {
                     method: 'POST',
                     headers: {
@@ -938,7 +966,7 @@ GSAP animations to implement:
                         'anthropic-dangerous-direct-browser-access': 'true'
                     },
                     body: JSON.stringify({
-                        model: 'claude-3-5-sonnet-20240620',
+                        model: modelToUse,
                         system: systemPrompt,
                         messages: [
                             { role: 'user', content: enrichedPrompt }
@@ -948,6 +976,7 @@ GSAP animations to implement:
                     })
                 });
             } else if (state.apiProvider === 'openai') {
+                if (!modelToUse) modelToUse = 'gpt-4o';
                 response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -955,7 +984,7 @@ GSAP animations to implement:
                         'Authorization': `Bearer ${state.apiKey}`,
                     },
                     body: JSON.stringify({
-                        model: 'gpt-4o',
+                        model: modelToUse,
                         messages: [
                             { role: 'system', content: systemPrompt },
                             { role: 'user', content: enrichedPrompt },
